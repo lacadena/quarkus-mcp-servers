@@ -21,7 +21,7 @@ All of these servers are available to run with [jbang everywhere](https://jbang.
 The `jdbc` server can be used to store and retrieve data from a database given just a JDBC URL. You can use any JDBC database, like Postgres, MySQL, Oracle, Sqlite, etc.
 
 ```shell
-jbang jdbc@quarkiverse/quarkus-mcp-servers
+jbang jdbc@lacadena/quarkus-mcp-servers
 ```
 
 See more in the [jdbc readme](jdbc/README.md).

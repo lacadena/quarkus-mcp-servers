@@ -97,6 +97,7 @@ jdbc:sqlite:%{https://github.com/lerocha/netflixdb/releases/download/v1.0.0/netf
 | [h2](https://www.h2database.com/html/features.html#database_url) | com.h2database:h2:RELEASE |
 | [Apache Derby](https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp17453.html) | org.apache.derby:derby:RELEASE |
 | SQLite | org.xerial:sqlite-jdbc:RELEASE |
+| jt400 | net.sf.jt400:jt400:20.0.7 |
 
 ## Components
 

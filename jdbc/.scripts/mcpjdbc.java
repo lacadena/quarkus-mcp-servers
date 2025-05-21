@@ -1,5 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //DEPS info.picocli:picocli:4.6.3
+//DEPS net.sf.jt400:jt400:20.0.7
 //DESC This script launches mcp-jdbc server with proper driver and url based on 
 //DESC the jdbc url provided.
 //JAVA 17+
@@ -76,22 +77,7 @@ class jdbc implements Callable<Integer> {
         List<String> command = new ArrayList<>();
 
         // use the jbang command from env or assume on path
-        String jbangcmd = System.getenv("JBANG_LAUNCH_CMD");
-        
-        if (jbangcmd == null) {
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) {
-                jbangcmd = "jbang.cmd";
-            } else {
-                jbangcmd = "jbang";
-            }
-        } else if(jbangcmd.endsWith(".ps1")) {
-            //dumb hack to avoid .ps1 files on windows
-            //https://github.com/quarkiverse/quarkus-mcp-servers/issues/65
-            jbangcmd = jbangcmd.substring(0, jbangcmd.length() - 4) + ".cmd";
-        }
-
-        command.add(jbangcmd);
+        command.add("jbang");  // Works on all platforms
         command.add("--quiet");
         command.add("--java");
         command.add("17+");
@@ -119,12 +105,11 @@ class jdbc implements Callable<Integer> {
             command.addAll(additionalArgs);
         }
 
-        // System.out.println(String.join(" ", command));
-
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.inheritIO();
         Process process = processBuilder.start();
         processBuilder.inheritIO();
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             process.destroyForcibly();
         }));
@@ -161,6 +146,8 @@ class jdbc implements Callable<Integer> {
         // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp17453.html
         drivers.put("derby", List.of("org.apache.derby:derby:RELEASE"));
         drivers.put("sqlite", List.of("org.xerial:sqlite-jdbc:RELEASE", "org.slf4j:slf4j-simple:1.7.36"));
+
+        drivers.put("as400", List.of("net.sf.jt400:jt400:20.0.7"));
         return drivers;
     }
 
@@ -191,6 +178,8 @@ class jdbc implements Callable<Integer> {
         // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp17453.html
         drivers.put("derby", "org.apache.derby.jdbc.EmbeddedDriver");
         drivers.put("sqlite", "org.sqlite.JDBC");
+
+        drivers.put("as400", "com.ibm.as400.access.AS400JDBCDriver");
         return drivers;
     }
 }
