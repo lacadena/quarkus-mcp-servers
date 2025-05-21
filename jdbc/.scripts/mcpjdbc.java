@@ -23,9 +23,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
 // jdbc urls: https://www.baeldung.com/java-jdbc-url-format
 // maven drivers: https://vladmihalcea.com/jdbc-driver-maven-dependency/
 
@@ -36,8 +33,6 @@ import java.util.logging.Level;
         mcp-server-jdbc jdbc:oracle:thin:@myoracle.db.server:1521:my_sid
         """)
 class jdbc implements Callable<Integer> {
-
-    private static final Logger logger = Logger.getLogger("jdbc");
 
     @Parameters(index = "0", arity = "0..1", description = "JDBC url to connect to. Defaults to in-memory h2 database", defaultValue = "jdbc:h2:mem:test")
     String jdbcurl;
@@ -119,20 +114,6 @@ class jdbc implements Callable<Integer> {
         processBuilder.inheritIO();
         Process process = processBuilder.start();
         processBuilder.inheritIO();
-
-        logger.info("Checking JDBC connection to: " + jdbcurl);
-
-        try (Connection conn = DriverManager.getConnection(jdbcurl, user, password)) {
-            if (conn != null && !conn.isClosed()) {
-                logger.info("JDBC connection established successfully.");
-            } else {
-                logger.warning("Connection was null or closed.");
-                return 1;
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed to connect to DB: " + e.getMessage(), e);
-            return 1;
-        }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             process.destroyForcibly();
