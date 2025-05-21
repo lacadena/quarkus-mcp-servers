@@ -18,11 +18,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-
 // jdbc urls: https://www.baeldung.com/java-jdbc-url-format
 // maven drivers: https://vladmihalcea.com/jdbc-driver-maven-dependency/
 
