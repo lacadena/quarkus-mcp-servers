@@ -45,5 +45,11 @@
       },
       "properties": {}
     }
+  },
+  "scripts": {
+    "jdbc": {
+      "script-ref": ".scripts/mcpjdbc.java",
+      "description": "JDBC MCP launcher"
+    }
   }
 }
