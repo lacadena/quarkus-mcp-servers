@@ -1,5 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //DEPS info.picocli:picocli:4.6.3
+//DEPS net.sf.jt400:jt400:20.0.7
 //DESC This script launches mcp-jdbc server with proper driver and url based on 
 //DESC the jdbc url provided.
 //JAVA 17+
@@ -17,6 +18,14 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 // jdbc urls: https://www.baeldung.com/java-jdbc-url-format
 // maven drivers: https://vladmihalcea.com/jdbc-driver-maven-dependency/
 
@@ -27,6 +36,8 @@ import picocli.CommandLine.Parameters;
         mcp-server-jdbc jdbc:oracle:thin:@myoracle.db.server:1521:my_sid
         """)
 class jdbc implements Callable<Integer> {
+
+    private static final Logger logger = Logger.getLogger("jdbc");
 
     @Parameters(index = "0", arity = "0..1", description = "JDBC url to connect to. Defaults to in-memory h2 database", defaultValue = "jdbc:h2:mem:test")
     String jdbcurl;
@@ -76,22 +87,7 @@ class jdbc implements Callable<Integer> {
         List<String> command = new ArrayList<>();
 
         // use the jbang command from env or assume on path
-        String jbangcmd = System.getenv("JBANG_LAUNCH_CMD");
-        
-        if (jbangcmd == null) {
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) {
-                jbangcmd = "jbang.cmd";
-            } else {
-                jbangcmd = "jbang";
-            }
-        } else if(jbangcmd.endsWith(".ps1")) {
-            //dumb hack to avoid .ps1 files on windows
-            //https://github.com/quarkiverse/quarkus-mcp-servers/issues/65
-            jbangcmd = jbangcmd.substring(0, jbangcmd.length() - 4) + ".cmd";
-        }
-
-        command.add(jbangcmd);
+        command.add("jbang");  // Works on all platforms
         command.add("--quiet");
         command.add("--java");
         command.add("17+");
@@ -119,12 +115,25 @@ class jdbc implements Callable<Integer> {
             command.addAll(additionalArgs);
         }
 
-        // System.out.println(String.join(" ", command));
-
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.inheritIO();
         Process process = processBuilder.start();
         processBuilder.inheritIO();
+
+        logger.info("Checking JDBC connection to: " + jdbcurl);
+
+        try (Connection conn = DriverManager.getConnection(jdbcurl, user, password)) {
+            if (conn != null && !conn.isClosed()) {
+                logger.info("JDBC connection established successfully.");
+            } else {
+                logger.warning("Connection was null or closed.");
+                return 1;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to connect to DB: " + e.getMessage(), e);
+            return 1;
+        }
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             process.destroyForcibly();
         }));
@@ -161,6 +170,8 @@ class jdbc implements Callable<Integer> {
         // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp17453.html
         drivers.put("derby", List.of("org.apache.derby:derby:RELEASE"));
         drivers.put("sqlite", List.of("org.xerial:sqlite-jdbc:RELEASE", "org.slf4j:slf4j-simple:1.7.36"));
+
+        drivers.put("as400", List.of("net.sf.jt400:jt400:20.0.7"));
         return drivers;
     }
 
@@ -191,6 +202,8 @@ class jdbc implements Callable<Integer> {
         // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp17453.html
         drivers.put("derby", "org.apache.derby.jdbc.EmbeddedDriver");
         drivers.put("sqlite", "org.sqlite.JDBC");
+
+        drivers.put("as400", "com.ibm.as400.access.AS400JDBCDriver");
         return drivers;
     }
 }
